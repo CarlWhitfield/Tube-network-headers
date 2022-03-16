@@ -15,12 +15,17 @@
 namespace inlist
 {
 	//generic template for options and params lists
+    template<class T>
+    struct instance { typedef T type; };
+
 	template <class T1, class T2>
 	class List
 	{
 	protected:
 		std::unordered_map<std::string, T1> dict1;
 		std::unordered_map<std::string, T2> dict2;
+        T1 get(const std::string & name, instance<T1>) const { return this->dict1[name]; }
+        T2 get(const std::string & name, instance<T2>) const { return this->dict2[name]; }
 	public:
 		//functions
 		List(){};
@@ -30,9 +35,10 @@ namespace inlist
 		bool parse(const std::string &name, const std::string &nc);
 		inline void add(const std::string & name, const T1 & entry){ this->dict1[name] = entry; }
 		inline void add(const std::string & name, const T2 & entry){ this->dict2[name] = entry; }
-		template<class T3> T3 get(const std::string & name) const { return NULL; }
-		template<> T1 get<T1>(const std::string & name) const { return this->dict1[name]; }
-		template<> T2 get<T2>(const std::string & name) const { return this->dict2[name]; }
+		template<class T3> T3 get(const std::string & name) const
+		{
+            return this->get(name, instance<T3>());
+        }
 	};
 
 	template<class T1, class T2> 
@@ -255,12 +261,15 @@ namespace inlist
 	{
 	protected:
 		std::unordered_map<std::string, std::vector<std::string>> filenames;
+        Option<T1>* get_option(const std::string & name, instance<T1>) const { return this->dict1.at(name).get(); }
+        Option<T2>* get_option(const std::string & name, instance<T2>) const { return this->dict2.at(name).get(); }
 	public:
 
 		OptionList(){};   //default constructor is blank
-		template<typename T3> Option<T3>* get_option(const std::string & name) const {};
-		template<> Option<T1>* get_option<T1>(const std::string & name) const { return this->dict1.at(name).get(); }
-		template<> Option<T2>* get_option<T2>(const std::string & name) const { return this->dict2.at(name).get(); }
+		template<typename T3> Option<T3>* get_option(const std::string & name) const
+		{
+            return this->get_option(name, instance<T3>());
+        }
 
 		inline void add_filename(const std::string & code, const std::string & fname)
 		{ 
@@ -326,11 +335,14 @@ namespace inlist
 				if(!it->second->isOK()) it->second->set_to_default();
 			}
 		}
+        Parameter<T1>* get_param(const std::string & name, instance<T1>) const { return this->dict1.at(name).get(); }
+        Parameter<T2>* get_param(const std::string & name, instance<T2>) const { return this->dict2.at(name).get(); }
 	public:
 		ParameterList(){};    //default constructor uses pre-defined default params
-		template<typename T3> Parameter<T3>* get_param(const std::string & name) const {};
-		template<> Parameter<T1>* get_param<T1>(const std::string & name) const { return this->dict1.at(name).get(); }
-		template<> Parameter<T2>* get_param<T2>(const std::string & name) const { return this->dict2.at(name).get(); }
+		template<typename T3> Parameter<T3>* get_param(const std::string & name) const
+		{
+            return this->get_param(name, instance<T3>());
+        }
 
 		inline void set_conversion(const std::string & name, const double & val){ this->conversions_phys_to_sim[name] = val; }
 		inline double get_conversion(const std::string & name) const { return (this->conversions_phys_to_sim.at(name)); }

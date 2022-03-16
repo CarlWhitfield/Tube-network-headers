@@ -19,6 +19,7 @@
 #include <iostream>
 #include <iomanip>
 #include <memory>
+#include <algorithm>
 
 //name of file extensions for node, edge and term node files
 #define NODE_FILE_EXT "nodes"
