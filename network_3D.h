@@ -256,8 +256,8 @@ namespace network
 			this->update_node_edge_maps();
 			if(this->reorder_network()) abort_on_failure();   //returns 1 on error
 		}
-        int reorder_network();
-		int reorder_network(std::vector<size_t> & old_node_indices_to_new,
+        virtual int reorder_network();
+		virtual int reorder_network(std::vector<size_t> & old_node_indices_to_new,
                             std::vector<size_t> & old_edge_indices_to_new);
 		void update_node_edge_maps();
 	public:

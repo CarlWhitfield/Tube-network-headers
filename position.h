@@ -46,7 +46,8 @@ namespace pos
 
 		inline T angle(const Position<T> &pos) const 
 		{
-			return (acos(this->dot(pos) / (this->magnitude()*pos.magnitude())));
+            T arg = this->dot(pos) / (this->magnitude()*pos.magnitude());
+            return acos(std::min(arg,1.0));
 		}
 
 		inline Position<T> cross(const Position<T> &pos) const 
