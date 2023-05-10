@@ -135,8 +135,8 @@ namespace inlist
 	protected:
 		std::vector<T> possible_values;
 		std::vector<std::string> value_names;
-        void read_char(const std::string & code);
-        void read_bool(const std::string & code);
+        /*void read_char(const std::string & code);
+        void read_bool(const std::string & code);*/
 	public:
 		std::string print() const 
 		{
@@ -159,7 +159,9 @@ namespace inlist
 			value_names = vectorise(option_name_list, option_count);
 		}
 
-		void read(const std::string & code){
+		void read(const std::string & code){};
+
+		/*void read(const std::string & code){
             if (typeid(T) == typeid(char))
             {
                 this->read_char(code);
@@ -168,7 +170,9 @@ namespace inlist
             {
                 this->read_bool(code);
             }
-        };
+        };*/
+
+
         //character option -- for multiple choice options
 
 		std::string get_value_name() const 
@@ -182,25 +186,25 @@ namespace inlist
 	};
 
 	//character option -- for multiple choice options
-	template<typename T> void Option<T>::read_char(const std::string & code)
+	template<> void Option<char>::read(const std::string & code)
 	{
-			bool error = true;
-			for (unsigned i = 0; i < ((unsigned) possible_values.size()); ++i)
+		bool error = true;
+		for (unsigned i = 0; i < ((unsigned) possible_values.size()); ++i)
+		{
+			if(code[0] == possible_values[i]) 
 			{
-				if(code[0] == possible_values[i]) 
-				{
-					this->update_value(possible_values[i]);
-					error = false;
-				}
+				this->update_value(possible_values[i]);
+				error = false;
 			}
-			if(error)
-			{
-				std::cout << name << " option code " << code << " not recognised\n";
-			}
+		}
+		if(error)
+		{
+			std::cout << this->name << " option code " << code << " not recognised\n";
+		}
 	}
 
 	//boolean option
-	template<typename T> void Option<T>::read_bool(const std::string & code)
+	template<> void Option<bool>::read(const std::string & code)
 	{
 		switch(code[0])
 		{
@@ -218,7 +222,7 @@ namespace inlist
 		
 			default:
 			{
-				std::cout << name << " option code " << code << " not recognised\n";
+				std::cout << this->name << " option code " << code << " not recognised\n";
 			}
 		}
 	}
@@ -228,13 +232,13 @@ namespace inlist
 	class Parameter: public Input<T>
 	{
     protected:
-		inline void read_int(const std::string & code){this->update_value(atoi(code.c_str()));}
-		inline void read_double(const std::string & code){this->update_value(atof(code.c_str()));}
+		/*inline void read_int(const std::string & code){this->update_value(atoi(code.c_str()));}
+		inline void read_double(const std::string & code){this->update_value(atof(code.c_str()));}*/
 	public:
 		Parameter<T>():Input<T>(){};
 		Parameter(const T & val, const std::string & nam):Input<T>(val, nam){};
-		virtual void read(const std::string & code)
-        {
+		virtual void read(const std::string & code){};
+        /*{
             if (typeid(T) == typeid(int))
             {
                 this->read_int(code);
@@ -243,7 +247,7 @@ namespace inlist
             {
                 this->read_double(code);
             }
-        }
+        }*/
 
 		virtual void set_conversion( T * ){};
 		virtual bool isOK() const { return true; }
@@ -255,10 +259,10 @@ namespace inlist
 	};
 
 	//integer parameters
-	//template<> void Parameter<int>::read(const std::string &c){ this->update_value(atoi(c.c_str()));}  //this is common to all params of type double
+	template<> void Parameter<int>::read(const std::string &c){ this->update_value(atoi(c.c_str()));}  //this is common to all params of type int
 	
 	//double parameters
-	//template<> void Parameter<double>::read(const std::string &c){ this->update_value(atof(c.c_str())); }
+	template<> void Parameter<double>::read(const std::string &c){ this->update_value(atof(c.c_str())); }
 
 	//template for list of two types of options
 	template<typename T1, typename T2> class OptionList: public List<std::shared_ptr<Option<T1>>, std::shared_ptr<Option<T2>>>
