@@ -19,6 +19,7 @@
 #include <iostream>
 #include <iomanip>
 #include <memory>
+#include <algorithm>
 
 //name of file extensions for node, edge and term node files
 #define NODE_FILE_EXT "nodes"
@@ -50,7 +51,7 @@ namespace network
 	public:
 		//-------Member functions-------//
 		TubeGeometry(){};
-		TubeGeometry::TubeGeometry(const double & rad, const double & len)
+		TubeGeometry(const double & rad, const double & len)
 		{
 			radius = rad;
 			length = len;
@@ -60,7 +61,7 @@ namespace network
 			o_area = area_calc(outer_radius);
 			o_vol = vol_calc(o_area, length);
 		}
-		TubeGeometry::TubeGeometry(const double & rad, const double & len, const double & o_rad)
+		TubeGeometry(const double & rad, const double & len, const double & o_rad)
 		{
 			radius = rad;
 			length = len;
@@ -255,8 +256,9 @@ namespace network
 			this->update_node_edge_maps();
 			if(this->reorder_network()) abort_on_failure();   //returns 1 on error
 		}
-		int reorder_network( std::vector<size_t> & old_node_indices_to_new = std::vector<size_t>(), 
-			                 std::vector<size_t> & old_edge_indices_to_new = std::vector<size_t> () );
+        virtual int reorder_network();
+		virtual int reorder_network(std::vector<size_t> & old_node_indices_to_new,
+                            std::vector<size_t> & old_edge_indices_to_new);
 		void update_node_edge_maps();
 	public:
 		//constructors
@@ -315,7 +317,7 @@ namespace network
 		{
 			if(this->edge_exists(e))
 			{
-				return (this->edge_index_map.at(n)); 
+				return (this->edge_index_map.at(e));
 			}
 			else
 			{
@@ -676,9 +678,19 @@ namespace network
 		this->setup();
 	}
 
+    template<class NodeType, class EdgeType> int Network<NodeType,EdgeType>::reorder_network()
+    {
+        //this function gives the option of doing the reorder without storing the map to
+        //old values
+        std::vector<size_t> default_vec1 = std::vector<size_t>();
+        std::vector<size_t> default_vec2 = std::vector<size_t>();
+        return this->reorder_network(default_vec1, default_vec2);
+    }
+
 	//template network sort
 	template<class NodeType, class EdgeType> int Network<NodeType,EdgeType>::reorder_network
-		            (std::vector<size_t> & old_node_indices_to_new, std::vector<size_t> & old_edge_indices_to_new)
+		            (std::vector<size_t> & old_node_indices_to_new,
+                     std::vector<size_t> & old_edge_indices_to_new)
 	//check everything is connected correctly, and order edge and node vectors so that term edges and nodes at end, and trachea at start
 	{
 		if(this->EdgeVec.size() > 0)
