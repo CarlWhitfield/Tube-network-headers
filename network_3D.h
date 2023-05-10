@@ -467,7 +467,7 @@ namespace network
 					if(part_split.size() < 4)
 					{
 						std::cout << "Error, not enough columns for node " << row << '\n';
-						abort_on_failure();
+						//do nothing, ifgnore row abort_on_failure();
 					}
 					else
 					{
@@ -519,7 +519,7 @@ namespace network
 					if(part_split.size() < 1)
 					{
 						std::cout << "Error, not enough columns for node " << row << '\n';
-						abort_on_failure();
+						//do nothing ignore row //abort_on_failure();
 					}
 					else
 					{
@@ -575,8 +575,8 @@ namespace network
 				{
 					if(part_split.size() < 4)
 					{
-						std::cout << "Error, not enough columns for node " << row << '\n';
-						abort_on_failure();
+						std::cout << "Error, not enough columns for edge " << row << '\n';
+						//do nothing, ignore row
 					}
 					else
 					{

@@ -92,28 +92,35 @@ namespace inlist
 	protected:
 		T Default_value, value;
 		std::string name;
+		bool updated;
 	public:
 		Input(){};
 		Input(const T & val, const std::string & nam)
 		{
-			value = val;
-			Default_value = val;
-			name = nam;
+			this->value = val;
+			this->Default_value = val;
+			this->name = nam;
+			this->updated = false;
 		}
 
 		T get_value(){ return this->value; }
 		inline std::string get_name(){ return this->name; }
 		inline void set_default_value(const T & val)
 		{ 
-			Default_value = val;
+			this->Default_value = val;
 		}
 		virtual void set_to_default()
 		{ 
-			value = Default_value;
+			this->value = this->Default_value;
+			this->updated = false;
 		}
-		virtual void update_value( const T & v ){ value = v; }
+		virtual void update_value( const T & v ){ 
+			this->value = v;
+			this->updated = true;
+		}
 		virtual void read(const std::string &){};
 		virtual std::string print() const {return "Undefined";}
+		virtual bool has_changed() const { return this->updated; }
 	};
 
 	//option class
@@ -162,7 +169,7 @@ namespace inlist
 			{
 				if(code[0] == possible_values[i]) 
 				{
-					this->value = possible_values[i];
+					this->update_value(possible_values[i]);
 					error = false;
 				}
 			}
@@ -180,13 +187,13 @@ namespace inlist
 			case 't':
 			case 'T':
 			{
-				this->value = true;
+				this->update_value(true);
 			} break;
 		
 			case 'f':
 			case 'F':
 			{
-				this->value = false;
+				this->update_value(false);
 			} break;
 		
 			default:
@@ -209,16 +216,16 @@ namespace inlist
 		virtual bool isOK() const { return true; }
 		virtual T get_phys_value() const { return this->value; }
 		virtual T get_SI_value() const { return this->value; }
-		virtual void set_phys_value( const T & val ){ this->value = val; }
+		virtual void set_phys_value( const T & val ){ this->update_value(val); }
 		virtual void calc_sim_from_phys_value(){};
 		virtual std::string phys_value_string() const { return ""; }
 	};
 
 	//integer parameters
-	template<> void Parameter<int>::read(const std::string &c){ value = atoi(c.c_str());}  //this is common to all params of type double
+	template<> void Parameter<int>::read(const std::string &c){ this->update_value(atoi(c.c_str()));}  //this is common to all params of type double
 	
 	//double parameters
-	template<> void Parameter<double>::read(const std::string &c){ value = atof(c.c_str()); }
+	template<> void Parameter<double>::read(const std::string &c){ this->update_value(atof(c.c_str())); }
 
 	//template for list of two types of options
 	template<typename T1, typename T2> class OptionList: public List<std::shared_ptr<Option<T1>>, std::shared_ptr<Option<T2>>>
