@@ -182,7 +182,7 @@ namespace inlist
 	};
 
 	//character option -- for multiple choice options
-	template<> void Option<char>::read(const std::string & code)
+	template<typename T> void Option<T>::read_char(const std::string & code)
 	{
 			bool error = true;
 			for (unsigned i = 0; i < ((unsigned) possible_values.size()); ++i)
@@ -199,8 +199,8 @@ namespace inlist
 			}
 	}
 
-	//boolian option
-	template<> void Option<bool>::read(const std::string & code)
+	//boolean option
+	template<typename T> void Option<T>::read_bool(const std::string & code)
 	{
 		switch(code[0])
 		{
@@ -228,8 +228,8 @@ namespace inlist
 	class Parameter: public Input<T>
 	{
     protected:
-        void read_int(const std::string & code);
-        void read_double(const std::string & code);
+		inline void read_int(const std::string & code){this->update_value(atoi(code.c_str()));}
+		inline void read_double(const std::string & code){this->update_value(atof(code.c_str()));}
 	public:
 		Parameter<T>():Input<T>(){};
 		Parameter(const T & val, const std::string & nam):Input<T>(val, nam){};
@@ -255,10 +255,10 @@ namespace inlist
 	};
 
 	//integer parameters
-	template<> void Parameter<int>::read(const std::string &c){ this->update_value(atoi(c.c_str()));}  //this is common to all params of type double
+	//template<> void Parameter<int>::read(const std::string &c){ this->update_value(atoi(c.c_str()));}  //this is common to all params of type double
 	
 	//double parameters
-	template<> void Parameter<double>::read(const std::string &c){ this->update_value(atof(c.c_str())); }
+	//template<> void Parameter<double>::read(const std::string &c){ this->update_value(atof(c.c_str())); }
 
 	//template for list of two types of options
 	template<typename T1, typename T2> class OptionList: public List<std::shared_ptr<Option<T1>>, std::shared_ptr<Option<T2>>>
