@@ -195,7 +195,7 @@ namespace inlist
 			}
 			if(error)
 			{
-				std::cout << name << " option code " << code << " not recognised\n";
+				std::cout << this->name << " option code " << code << " not recognised\n";
 			}
 	}
 
@@ -218,7 +218,7 @@ namespace inlist
 		
 			default:
 			{
-				std::cout << name << " option code " << code << " not recognised\n";
+				std::cout << this->name << " option code " << code << " not recognised\n";
 			}
 		}
 	}
