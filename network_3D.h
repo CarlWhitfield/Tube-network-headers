@@ -285,7 +285,7 @@ namespace network
 			                              const std::map<char, std::vector<std::vector<double>>>
 			                              & extra_vals = std::map<char, std::vector<std::vector<double>>>()) const;
 		virtual int print_vtk(const std::string &fhead, const double & length_scale,
-		        const std::unordered_map<std::string,std::vector<double>> & extra_vals = std::unordered_map<std::string,std::vector<double>>()) const;
+		        const std::unordered_map<std::string,std::vector<double>> & extra_vals = std::unordered_map<std::string,std::vector<double>>(), const bool exclude_multiples = false) const;
 		void copy_structure(Network<NodeType,EdgeType> *);
 		virtual int copy_vals(Network<NodeType,EdgeType> * t){ return (this->copy_tree_vals(t)); }
 
@@ -1076,8 +1076,10 @@ namespace network
 		return 0;
 	}
 
-	template<class NodeType, class EdgeType> int Network<NodeType,EdgeType>::print_vtk(const std::string &fhead, const double & length_scale,
-		                              const std::unordered_map<std::string, std::vector<double>> & extra_vals) const
+	template<class NodeType, class EdgeType>
+		int Network<NodeType,EdgeType>::print_vtk(const std::string &fhead, const double & length_scale,
+								const std::unordered_map<std::string, std::vector<double>> & extra_vals,
+								const bool exclude_multiples) const
 	{
 		//unpack extra values from extra_vals
 		//strings to store parameter names
@@ -1114,22 +1116,53 @@ namespace network
 		std::ofstream output;
 		output.open(filename);
 		output << std::fixed << std::setprecision(12);
-
+		
 		size_t Npts =  this->count_nodes();
+		std::vector<size_t> nodes_to_print;
+		for(size_t k = 0; k < Npts; k++)
+		{
+			if((exclude_multiples == false) || this->get_node(k)->point_count() == 1)
+			{
+				nodes_to_print.push_back(k);
+			}
+		}
+		Npts =  nodes_to_print.size();
+		//map node numbers to index
+		std::map<size_t,size_t> nodes_printed_to_index;
+		for(size_t k = 0; k < Npts; k++)
+		{
+			nodes_printed_to_index[nodes_to_print[k]] = k;
+		}
+		
+		size_t Ncells = this->count_edges();
+		std::vector<size_t> cells_to_print;
+		for(size_t j = 0; j < Ncells; j++)
+		{
+			if((exclude_multiples == false) || this->get_edge(j)->branch_count() == 1)
+			{
+				cells_to_print.push_back(j);
+			}
+		}
+		Ncells = cells_to_print.size();
+		
 		output <<  "# vtk DataFile Version 3.0\nNetwork_data\nASCII\nDATASET UNSTRUCTURED_GRID\n";
 		output <<  "POINTS " << Npts << " float\n";
-		for (size_t k = 0; k < Npts; k++)
+		for (size_t nk = 0; nk < Npts; nk++)
 		{
+			size_t k = nodes_to_print[nk];
 			output << this->get_node(k)->get_pos(0) * length_scale << ' ' << this->get_node(k)->get_pos(1) * length_scale << ' ' << this->get_node(k)->get_pos(2) * length_scale << '\n';
 		}
 
 		//could define extra points and edges here for shapes for each terminal node
 
-		size_t Ncells = this->count_edges();
+
 		output <<  "\n\nCELLS " << Ncells << ' ' << 3*Ncells << '\n';
-		for (size_t j = 0; j < Ncells; j++)
+		for (size_t nj = 0; nj < Ncells; nj++)
 		{
-			output << 2 << ' ' << this->get_node_in_index(j) << ' ' << this->get_node_out_index(j) << '\n';  //node numbers are order they are printed to vtk
+			size_t j = cells_to_print[nj];
+			output << 2 << ' ' << nodes_printed_to_index[this->get_node_in_index(j)] << ' ' <<
+								  nodes_printed_to_index[this->get_node_out_index(j)] << '\n';
+			//node numbers are order they are printed to vtk
 		}
 
 		output <<  "\n\nCELL_TYPES " << Ncells << '\n';  //all cell types are edges
@@ -1142,22 +1175,25 @@ namespace network
 		{
 			std::string key = node_val_keys[i_extra];
 			output <<  "\nSCALARS " << key << " float\nLOOKUP_TABLE default\n";
-			for (size_t k = 0; k < Npts; k++)
+			for (size_t nk = 0; nk < Npts; nk++)
 			{
+				size_t k = nodes_to_print[nk];
 				output << (extra_vals.find(key)->second)[k] << '\n';
 			}
 		}
 
 		output <<  "\n\nCELL_DATA " << Ncells << "\n";
 		output <<  "\nSCALARS Nbranches float\nLOOKUP_TABLE default\n";
-		for (size_t j = 0; j < Ncells; j++)
+		for (size_t nj = 0; nj < Ncells; nj++)
 		{
+			size_t j = cells_to_print[nj];
 			output << this->get_edge(j)->branch_count() << '\n';  //node numbers are order they are printed to vtk
 		}
 
 		output <<  "\nSCALARS Inner_rad float\nLOOKUP_TABLE default\n";
-		for (size_t j = 0; j < Ncells; j++)
+		for (size_t nj = 0; nj < Ncells; nj++)
 		{
+			size_t j = cells_to_print[nj];
 			output << this->get_edge(j)->get_geom()->get_inner_radius() * length_scale << '\n';  //node numbers are order they are printed to vtk
 		}
 
@@ -1166,8 +1202,9 @@ namespace network
 		{
 			std::string key = edge_val_keys[i_extra];
 			output <<  "\nSCALARS " << key << " float\nLOOKUP_TABLE default\n";
-			for (size_t j = 0; j < Ncells; j++)
+			for (size_t nj = 0; nj < Ncells; nj++)
 			{
+				size_t j = cells_to_print[nj];
 				output << (extra_vals.find(key)->second)[j] << '\n';
 			}
 		}
