@@ -155,8 +155,8 @@ namespace inlist
 		Option<T>(const T & val, const std::string & nam, const T *option_list,
 				  const std::string *option_name_list, const int & option_count):Input<T>(val, nam)
 		{
-			possible_values = vectorise(option_list, option_count);
-			value_names = vectorise(option_name_list, option_count);
+			possible_values = globals::vectorise(option_list, option_count);
+			value_names = globals::vectorise(option_name_list, option_count);
 		}
 
 		void read(const std::string & code){

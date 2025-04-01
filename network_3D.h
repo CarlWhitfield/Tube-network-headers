@@ -20,6 +20,7 @@
 #include <iomanip>
 #include <memory>
 #include <algorithm>
+#include <functional>
 
 //name of file extensions for node, edge and term node files
 #define NODE_FILE_EXT "nodes"
@@ -254,12 +255,12 @@ namespace network
 		inline void setup()
 		{
 			this->update_node_edge_maps();
-			if(this->reorder_network()) abort_on_failure();   //returns 1 on error
+			if (this->reorder_network()) globals::abort_on_failure();   //returns 1 on error
 		}
         virtual int reorder_network();
 		virtual int reorder_network(std::vector<size_t> & old_node_indices_to_new,
                             std::vector<size_t> & old_edge_indices_to_new);
-		void update_node_edge_maps();
+		virtual void update_node_edge_maps();
 	public:
 		//constructors
 		Network(const bool & tree = true)
@@ -437,7 +438,7 @@ namespace network
 		std::map<long int,std::shared_ptr<NodeType>> node;     //stores indexed list of nodes -- from file
 		std::map<long int,std::shared_ptr<EdgeType>> edge;     //stores indexed list of edges
 
-		if(this->read_network_files(node, edge, node_fname, edge_fname, term_fname, l_scale)) abort_on_failure();
+		if (this->read_network_files(node, edge, node_fname, edge_fname, term_fname, l_scale)) globals::abort_on_failure();
 		this->initialise_from_maps(node, edge);
 	}
 
@@ -600,7 +601,7 @@ namespace network
 							if(part_split.size() < 2)
 							{
 								std::cout << "Error, not enough columns for edge " << row << '\n';
-								abort_on_failure();
+								globals::abort_on_failure();
 							}
 							else
 							{
@@ -614,7 +615,7 @@ namespace network
 							if(part_split.size() < 2)
 							{
 								std::cout << "Error, not enough columns for edge " << row << '\n';
-								abort_on_failure();
+								globals::abort_on_failure();
 							}
 							else
 							{
@@ -764,7 +765,7 @@ namespace network
 
 			//re-fill node vector -- trachea, then intermediate, then terminal
 			this->internal_start = trachea_node_index.size();
-			for(int k = 0; k < this->internal_start; k++)
+			for(size_t k = 0; k < this->internal_start; k++)
 			{
 				this->NodeVec[k] = old_node_vec[trachea_node_index[k]];
 				old_node_indices_to_new[trachea_node_index[k]] = k;
@@ -1221,7 +1222,7 @@ namespace network
 		for(size_t k = 0; k < tree_in->count_nodes(); k++)
 		{
 			this->NodeVec[k] = std::make_shared<NodeType>();    //create new node
-			this->get_node(k)->copy_structure(tree_in->get_node(k), false);   //copy the node structure
+			//this->get_node(k)->copy_structure(tree_in->get_node(k), false);   //copy the node structure
 		}
 
 		this->EdgeVec.clear();
@@ -1230,8 +1231,8 @@ namespace network
 		{
 			size_t kin = tree_in->get_node_in_index(j);
 			size_t kout = tree_in->get_node_out_index(j);
-			this->EdgeVec[j] = std::make_shared<EdgeType>(this->get_node(kin), this->get_node(kout));   //create new edge from new nodes
-			this->get_edge(j)->copy_structure(tree_in->get_edge(j));
+			this->EdgeVec[j] = std::make_shared<EdgeType>(this->NodeVec[kin], this->NodeVec[kout]);   //create new edge from new nodes
+			//this->get_edge(j)->copy_structure(tree_in->get_edge(j));
 		}
 		this->node_index_map = tree_in->node_index_map;
 		this->edge_index_map = tree_in->edge_index_map;
