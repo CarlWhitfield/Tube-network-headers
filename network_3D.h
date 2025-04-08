@@ -147,45 +147,44 @@ namespace network
 	protected:
 		std::shared_ptr<NodeType> node_in, node_out;
 		double Nbranches;
-		std::shared_ptr<TubeGeometry> geom;
-		std::shared_ptr<TubeGeometry> original_geom;
-		inline void init_geom(const double & rad)
+		std::shared_ptr<TubeGeometry> _reference_geom;
+		inline void init_reference_geom(const double & rad)
 		{
 			double len = this->node_in->get_pos().distance(this->node_out->get_pos());
-			this->geom = std::make_shared<TubeGeometry>(rad, len);
-			this->original_geom = this->geom;
+			_reference_geom = std::make_shared<TubeGeometry>(rad, len);
 		}
 		inline void set_nodes(std::shared_ptr<NodeType> ni, std::shared_ptr<NodeType> no)
 		{
 			this->node_in = ni;
 			this->node_out = no;
 		}
+
 	public:
 		//-------Member functions-------//
 		Edge(){};
 		Edge(std::shared_ptr<NodeType> ni, std::shared_ptr<NodeType> no)
 		{
 			this->set_nodes(ni, no);
-			this->init_geom(0);
+			this->init_reference_geom(0);
 		}
 		Edge(std::shared_ptr<NodeType> ni, std::shared_ptr<NodeType> no, const double & rad)
 		{
 			this->set_nodes(ni, no);
-			this->init_geom(rad);
+			this->init_reference_geom(rad);
 			this->Nbranches = 1;
 		}
 		Edge(std::shared_ptr<NodeType> ni, std::shared_ptr<NodeType> no, const double & Nb, const double & rad)
 		{
 			this->set_nodes(ni, no);
-			this->init_geom(rad);
+			this->init_reference_geom(rad);
 			this->Nbranches = Nb;
 		}
 		Edge(std::shared_ptr<NodeType> ni, std::shared_ptr<NodeType> no, const double & Nb, 
 			 const double & rad, const double & orad)
 		{
 			this->set_nodes(ni, no);
-			this->init_geom(rad);
-			this->update_outer_radius(orad);
+			this->init_reference_geom(rad);
+			this->update_reference_outer_radius(orad);
 			this->Nbranches = Nb;
 		}
 		~Edge(){};
@@ -194,24 +193,25 @@ namespace network
 		inline NodeType* get_node_in() const { return (this->node_in.get()); }
 		inline NodeType* get_node_out() const { return (this->node_out.get()); }
 		inline double branch_count() const { return (this->Nbranches); }
-		inline TubeGeometry* get_geom() const { return this->geom.get(); }
+		inline TubeGeometry* get_reference_geom() const { return _reference_geom.get(); }
 
-		virtual double get_inner_volume() const { return ((this->Nbranches)*(this->geom->inner_volume())); }
-		virtual double get_outer_volume() const { return ((this->Nbranches)*(this->geom->outer_volume())); }
+		virtual double get_reference_inner_volume() const { return ((this->Nbranches)*(_reference_geom->inner_volume())); }
+		virtual double get_reference_outer_volume() const { return ((this->Nbranches)*(_reference_geom->outer_volume())); }
 
-		inline void update_length() { this->geom->update_length( this->node_in->get_pos().distance(this->node_out->get_pos())); }
+		inline void update_reference_length() { _reference_geom->update_length(this->node_in->get_pos().distance(this->node_out->get_pos())); }
 
-		virtual void update_geometry(const TubeGeometry &tg){ *(this->geom) = tg; };
-		virtual void update_geometry(const double & rad, const double & len){ *(this->geom) = TubeGeometry(rad,len); }
-		virtual void update_length_from_nodes()
-		{ 
-			this->geom->update_length(this->node_in->get_pos().distance(this->node_out->get_pos())); 
+		virtual void update_reference_geometry(const TubeGeometry& tg) { *(_reference_geom) = tg; };
+		virtual void update_reference_geometry(const double& rad, const double& len) { *(_reference_geom) = TubeGeometry(rad, len); }
+		virtual void update_reference_length_from_nodes()
+		{
+			_reference_geom->update_length(this->node_in->get_pos().distance(this->node_out->get_pos()));
 		}
-		virtual void update_inner_radius(const double & rad){ this->geom->update_inner_radius(rad); }
-		virtual void update_outer_radius(const double & orad){ this->geom->update_outer_radius(orad); }
+		virtual void update_reference_inner_radius(const double& rad) { _reference_geom->update_inner_radius(rad); }
+		virtual void update_reference_outer_radius(const double& orad) { _reference_geom->update_outer_radius(orad); }
+
 		virtual void copy_edge_vals(Edge<NodeType> * edge)
 		{
-			*(this->geom) = *(edge->get_geom());
+			*(_reference_geom) = *(edge->get_reference_geom());
 			this->Nbranches = edge->branch_count();
 		}
 
@@ -424,8 +424,8 @@ namespace network
 
 		void remove_nodes(std::vector<std::size_t> & node_indices);
 		void remove_edges(std::vector<std::size_t> & edge_indices);
-		double get_total_edge_volume() const;
-		double get_total_inner_edge_volume() const;
+		double get_total_reference_edge_volume() const;
+		double get_total_reference_inner_edge_volume() const;
 		double count_branches_in(const size_t & node_no) const;
 	};
 
@@ -1025,11 +1025,11 @@ namespace network
 		{
 			edge_file << j << ", " << this->get_node_in_index(j) << ", "
 					  << this->get_node_out_index(j) << ", "
-					  << this->get_edge(j)->get_geom()->get_inner_radius() * length_scale
+					  << this->get_edge(j)->get_reference_geom()->get_inner_radius() * length_scale
 					  << ": n, " << this->get_edge(j)->branch_count();
-			if(this->get_edge(j)->get_geom()->get_outer_radius() != this->get_edge(j)->get_geom()->get_inner_radius())
+			if(this->get_edge(j)->get_reference_geom()->get_outer_radius() != this->get_edge(j)->get_reference_geom()->get_inner_radius())
 			{
-				edge_file << ": o, " << this->get_edge(j)->get_geom()->get_outer_radius();
+				edge_file << ": o, " << this->get_edge(j)->get_reference_geom()->get_outer_radius();
 			}
 			for(size_t i_e = 0; i_e < edge_val_keys.size(); i_e++)
 			{
@@ -1191,11 +1191,11 @@ namespace network
 			output << this->get_edge(j)->branch_count() << '\n';  //node numbers are order they are printed to vtk
 		}
 
-		output <<  "\nSCALARS Inner_rad float\nLOOKUP_TABLE default\n";
+		output <<  "\nSCALARS Reference_inner_rad float\nLOOKUP_TABLE default\n";
 		for (size_t nj = 0; nj < Ncells; nj++)
 		{
 			size_t j = cells_to_print[nj];
-			output << this->get_edge(j)->get_geom()->get_inner_radius() * length_scale << '\n';  //node numbers are order they are printed to vtk
+			output << this->get_edge(j)->get_reference_geom()->get_inner_radius() * length_scale << '\n';  //node numbers are order they are printed to vtk
 		}
 
 		//loop over extra edge args
@@ -1292,22 +1292,22 @@ namespace network
 		}
 	}
 
-	template<class NodeType, class EdgeType> double Network<NodeType,EdgeType>::get_total_edge_volume() const
+	template<class NodeType, class EdgeType> double Network<NodeType,EdgeType>::get_total_reference_edge_volume() const
 	{
 		double v = 0;
 		for(size_t j = 0; j < this->count_edges(); j++)
 		{
-			v += this->get_edge(j)->get_outer_volume();
+			v += this->get_edge(j)->get_reference_outer_volume();
 		}
 		return v;
 	}
 
-	template<class NodeType, class EdgeType> double Network<NodeType,EdgeType>::get_total_inner_edge_volume() const
+	template<class NodeType, class EdgeType> double Network<NodeType,EdgeType>::get_total_reference_inner_edge_volume() const
 	{
 		double v = 0;
 		for(size_t j = 0; j < this->count_edges(); j++)
 		{
-			v += this->get_edge(j)->get_inner_volume();
+			v += this->get_edge(j)->get_reference_inner_volume();
 		}
 		return v;
 	}
