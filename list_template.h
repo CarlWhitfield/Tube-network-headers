@@ -150,9 +150,9 @@ namespace inlist
 			return "unknown";
 		}
 
-		Option<T>():Input<T>(){};
-		Option<T>(const T & val, const std::string & nam):Input<T>(val, nam){};
-		Option<T>(const T & val, const std::string & nam, const T *option_list,
+		Option():Input<T>(){};
+		Option(const T & val, const std::string & nam):Input<T>(val, nam){};
+		Option(const T & val, const std::string & nam, const T *option_list,
 				  const std::string *option_name_list, const int & option_count):Input<T>(val, nam)
 		{
 			possible_values = globals::vectorise(option_list, option_count);
@@ -231,7 +231,7 @@ namespace inlist
 		inline void read_int(const std::string & code){this->update_value(atoi(code.c_str()));}
 		inline void read_double(const std::string & code){this->update_value(atof(code.c_str()));}
 	public:
-		Parameter<T>():Input<T>(){};
+		Parameter():Input<T>(){};
 		Parameter(const T & val, const std::string & nam):Input<T>(val, nam){};
 		virtual void read(const std::string & code)
         {
